@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#070D1A" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Teacher Daily Check-In" />
+  <title>TeacherDay 🦚</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --teal:        #0E7C7B;
+      --teal-bright: #14B8A6;
+      --teal-glow:   #5EEAD4;
+      --royal:       #2563EB;
+      --cobalt:      #1D4ED8;
+      --indigo:      #4338CA;
+      --violet:      #7C3AED;
+      --amethyst:    #9333EA;
+      --emerald:     #059669;
+      --emerald-lt:  #34D399;
+      --gold:        #D97706;
+      --gold-lt:     #FCD34D;
+      --bg-deep:     #070D1A;
+      --bg-card:     #111E33;
+      --text-bright: #F0F9FF;
+      --text-mid:    #BAD4E8;
+      --text-muted:  #6B8BA4;
+      --border:      rgba(14,124,123,0.25);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-bright);
+      min-height: 100vh;
+      padding-bottom: 90px;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 10% 0%,  rgba(14,124,123,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 90% 20%, rgba(124,58,237,0.15) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 60% at 50% 80%, rgba(30,58,138,0.2)   0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 80% 90%, rgba(5,150,105,0.12)  0%, transparent 50%);
+      pointer-events: none; z-index: 0;
+    }
+    body > * { position: relative; z-index: 1; }
+
+    /* ═══ HEADER ═══ */
+    header {
+      background: linear-gradient(160deg, #0D1B2E 0%, #070D1A 100%);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 40px rgba(14,124,123,0.15);
+      padding: 18px 20px 14px;
+      position: sticky; top: 0; z-index: 200;
+    }
+    .header-inner { max-width: 700px; margin: 0 auto; }
+    .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+
+    .brand-eyebrow { font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase; color: var(--teal-bright); font-weight: 700; display: block; margin-bottom: 1px; }
+    .brand-title {
+      font-family: 'Cormorant Garamond', serif; font-size: 1.9rem; font-weight: 700; line-height: 1;
+      background: linear-gradient(135deg, var(--teal-glow) 0%, var(--royal) 50%, var(--amethyst) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .date-block { text-align: right; background: rgba(14,124,123,0.1); border: 1px solid rgba(14,124,123,0.25); border-radius: 12px; padding: 7px 13px; }
+    .date-weekday { font-size: 0.6rem; color: var(--teal-bright); letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
+    .date-full { font-size: 0.88rem; font-weight: 600; color: var(--text-bright); }
+
+    /* Progress */
+    .progress-stats { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 5px; }
+    .progress-pct { color: var(--gold-lt); font-weight: 700; }
+    .reset-btn {
+      background: rgba(217,119,6,0.12); border: 1px solid rgba(217,119,6,0.3); color: var(--gold-lt);
+      border-radius: 8px; padding: 3px 10px; font-size: 0.62rem; font-family: 'Nunito', sans-serif;
+      font-weight: 700; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; transition: background 0.2s;
+    }
+    .reset-btn:hover { background: rgba(217,119,6,0.22); }
+    .progress-track { height: 6px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--teal) 0%, var(--royal) 50%, var(--amethyst) 100%);
+      box-shadow: 0 0 12px rgba(94,234,212,0.35);
+      transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    /* ═══ DAY TABS (scrollable row) ═══ */
+    .day-tab-wrap {
+      background: linear-gradient(160deg, #0D1B2E 0%, #070D1A 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      position: sticky;
+      top: 126px; /* below header */
+      z-index: 190;
+    }
+    .day-tab-wrap::-webkit-scrollbar { display: none; }
+    .day-tabs { display: flex; gap: 4px; max-width: 700px; margin: 0 auto; padding: 10px 0; width: max-content; }
+
+    .day-tab {
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 6px 14px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+    }
+    .day-tab:hover { color: var(--text-bright); border-color: rgba(14,124,123,0.3); }
+    .day-tab.active {
+      background: linear-gradient(135deg, rgba(14,124,123,0.3), rgba(124,58,237,0.25));
+      border-color: rgba(94,234,212,0.35);
+      color: var(--teal-glow);
+      box-shadow: 0 0 14px rgba(14,124,123,0.2);
+    }
+    .day-tab.today-tab { border-color: rgba(253,211,77,0.35); color: var(--gold-lt); }
+    .day-tab.today-tab.active { background: linear-gradient(135deg, rgba(217,119,6,0.25), rgba(124,58,237,0.25)); color: var(--gold-lt); }
+
+    /* ═══ MAIN ═══ */
+    main { max-width: 700px; margin: 0 auto; padding: 10px 16px 20px; }
+
+    /* ═══ VIEW SYSTEM ═══ */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ═══ DAY VIEW PANELS ═══ */
+    .day-panel { display: none; }
+    .day-panel.active { display: block; }
+
+    /* ═══ SECTION HEADERS ═══ */
+    .block-header { display: flex; align-items: center; gap: 10px; margin: 24px 0 10px; animation: fadeUp 0.4s ease both; }
+    .block-pill {
+      border-radius: 99px; padding: 4px 13px;
+      font-size: 0.63rem; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+    }
+    .pill-teal    { background: linear-gradient(135deg,#0E7C7B,#2563EB); color:#fff; box-shadow:0 0 14px rgba(14,124,123,0.4); }
+    .pill-violet  { background: linear-gradient(135deg,#4338CA,#7C3AED); color:#fff; box-shadow:0 0 14px rgba(124,58,237,0.4); }
+    .pill-emerald { background: linear-gradient(135deg,#059669,#0E7C7B); color:#fff; box-shadow:0 0 14px rgba(5,150,105,0.4); }
+    .pill-blue    { background: linear-gradient(135deg,#1D4ED8,#4338CA); color:#fff; box-shadow:0 0 14px rgba(37,99,235,0.4); }
+    .pill-gold    { background: linear-gradient(135deg,#D97706,#9333EA); color:#fff; box-shadow:0 0 14px rgba(217,119,6,0.35); }
+    .pill-amethyst{ background: linear-gradient(135deg,#7C3AED,#9333EA); color:#fff; box-shadow:0 0 14px rgba(147,51,234,0.4); }
+    .block-rule { flex:1; height:1px; background: linear-gradient(to right, rgba(94,234,212,0.22), transparent); }
+    .block-time { font-size: 0.66rem; color: var(--text-muted); white-space: nowrap; font-weight: 600; }
+
+    /* ═══ TASK CARDS ═══ */
+    .task-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255,255,255,0.055);
+      border-left: 3px solid var(--accent, #0E7C7B);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex; align-items: flex-start; gap: 12px;
+      transition: transform 0.15s, opacity 0.3s, box-shadow 0.2s;
+      animation: fadeUp 0.35s ease both;
+      position: relative;
+    }
+    .task-card:hover { box-shadow: 0 4px 24px rgba(14,124,123,0.15); }
+    .task-card.done { opacity: 0.38; }
+    .task-card.done .task-title { text-decoration: line-through; text-decoration-color: var(--teal-bright); }
+    .task-card.break-style { background: linear-gradient(135deg, rgba(5,150,105,0.1), rgba(14,124,123,0.07)); border-color: rgba(52,211,153,0.18); }
+    .task-card.custom-card { border-left-style: dashed; }
+
+    /* Checkbox area — clickable */
+    .check-area { display: flex; align-items: flex-start; gap: 12px; flex: 1; cursor: pointer; min-width: 0; }
+
+    .check {
+      flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+      border: 2px solid var(--accent, #0E7C7B);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.25s, transform 0.2s; margin-top: 2px;
+    }
+    .task-card.done .check { background: var(--accent, #0E7C7B); transform: scale(1.08); }
+    .check-mark { display: none; font-size: 0.75rem; font-weight: 900; color: white; }
+    .task-card.done .check-mark { display: block; }
+
+    .task-body { flex: 1; min-width: 0; }
+    .task-row  { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .task-title { font-size: 0.9rem; font-weight: 600; color: var(--text-bright); line-height: 1.3; }
+    .task-note  { font-size: 0.73rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+
+    .tag { font-size: 0.56rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; }
+    .tag-break    { background: rgba(5,150,105,0.18);  color: var(--emerald-lt); border: 1px solid rgba(5,150,105,0.28); }
+    .tag-planning { background: rgba(124,58,237,0.18); color: #C4B5FD;           border: 1px solid rgba(124,58,237,0.28); }
+    .tag-copies   { background: rgba(37,99,235,0.18);  color: #93C5FD;           border: 1px solid rgba(37,99,235,0.28); }
+    .tag-admin    { background: rgba(217,119,6,0.18);  color: var(--gold-lt);    border: 1px solid rgba(217,119,6,0.28); }
+    .tag-students { background: rgba(14,124,123,0.18); color: var(--teal-glow);  border: 1px solid rgba(14,124,123,0.28); }
+    .tag-self     { background: rgba(147,51,234,0.18); color: #E9D5FF;           border: 1px solid rgba(147,51,234,0.28); }
+    .tag-custom   { background: rgba(94,234,212,0.12); color: var(--teal-glow);  border: 1px solid rgba(94,234,212,0.22); }
+
+    /* Delete button on custom tasks */
+    .delete-btn {
+      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(220,38,38,0.12); border: 1px solid rgba(220,38,38,0.25);
+      color: #F87171; font-size: 0.75rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s; margin-top: 3px;
+      line-height: 1;
+    }
+    .delete-btn:hover { background: rgba(220,38,38,0.28); }
+
+    /* ═══ ADD TASK BUTTON & FORM ═══ */
+    .add-task-btn {
+      width: 100%;
+      background: rgba(14,124,123,0.08);
+      border: 1px dashed rgba(94,234,212,0.25);
+      border-radius: 14px;
+      padding: 11px 16px;
+      color: var(--teal-bright);
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; text-align: left;
+      transition: background 0.2s, border-color 0.2s;
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 10px;
+    }
+    .add-task-btn:hover { background: rgba(14,124,123,0.14); border-color: rgba(94,234,212,0.4); }
+    .add-icon { font-size: 1.1rem; line-height: 1; }
+
+    .add-form {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid rgba(94,234,212,0.2);
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 10px;
+      animation: fadeUp 0.25s ease both;
+    }
+    .add-form.open { display: block; }
+    .add-form-title { font-size: 0.72rem; color: var(--teal-bright); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+
+    .form-input {
+      width: 100%; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(94,234,212,0.18); border-radius: 10px;
+      padding: 10px 12px; color: var(--text-bright);
+      font-family: 'Nunito', sans-serif; font-size: 0.88rem;
+      outline: none; transition: border-color 0.2s; margin-bottom: 8px;
+    }
+    .form-input:focus { border-color: var(--teal-bright); }
+    .form-input::placeholder { color: var(--text-muted); }
+
+    .form-row { display: flex; gap: 8px; }
+    .form-select {
+      flex: 1; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(94,234,212,0.18); border-radius: 10px;
+      padding: 9px 10px; color: var(--text-bright);
+      font-family: 'Nunito', sans-serif; font-size: 0.82rem;
+      outline: none; cursor: pointer;
+    }
+    .form-select option { background: #111E33; color: var(--text-bright); }
+
+    .form-btns { display: flex; gap: 8px; margin-top: 8px; }
+    .btn-add-confirm {
+      flex: 1; background: linear-gradient(135deg, var(--teal), var(--royal));
+      border: none; border-radius: 10px; color: white;
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.82rem;
+      padding: 10px; cursor: pointer; transition: opacity 0.2s;
+    }
+    .btn-add-confirm:hover { opacity: 0.88; }
+    .btn-cancel {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; color: var(--text-muted);
+      font-family: 'Nunito', sans-serif; font-weight: 600; font-size: 0.82rem;
+      padding: 10px 16px; cursor: pointer;
+    }
+
+    /* ═══ COMPLETION BANNER ═══ */
+    .completion {
+      display: none; text-align: center;
+      background: linear-gradient(135deg, rgba(5,150,105,0.15), rgba(14,124,123,0.12));
+      border: 1px solid rgba(52,211,153,0.25); border-radius: 18px;
+      padding: 20px; margin: 12px 0;
+      animation: fadeUp 0.5s ease both;
+    }
+    .completion.show { display: block; }
+    .completion-icon { font-size: 2.5rem; }
+    .completion-title { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; color: var(--teal-glow); margin: 6px 0 3px; }
+    .completion-sub   { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* ═══ QUOTE ═══ */
+    .quote-block {
+      background: linear-gradient(135deg, rgba(14,124,123,0.12), rgba(124,58,237,0.1));
+      border: 1px solid rgba(94,234,212,0.1); border-radius: 16px;
+      padding: 16px 18px; margin-top: 24px; text-align: center;
+      animation: fadeUp 0.4s ease both;
+    }
+    .quote-text { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; color: var(--teal-glow); line-height: 1.55; font-weight: 600; }
+    .quote-sub  { font-size: 0.67rem; color: var(--text-muted); margin-top: 5px; letter-spacing: 1px; }
+
+    /* ═══ EMPTY STATE ═══ */
+    .empty-day {
+      text-align: center; padding: 40px 20px;
+      color: var(--text-muted); font-size: 0.85rem; line-height: 1.7;
+    }
+    .empty-day .big-icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+    .empty-day strong { color: var(--teal-bright); }
+
+    /* ═══ NOTES VIEW ═══ */
+    .page-title {
+      font-family: 'Cormorant Garamond', serif; font-size: 1.8rem;
+      background: linear-gradient(135deg, var(--teal-glow), var(--amethyst));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin: 20px 0 3px;
+    }
+    .page-sub { font-size: 0.77rem; color: var(--text-muted); margin-bottom: 16px; }
+    .notes-textarea {
+      width: 100%; min-height: 140px; background: var(--bg-card);
+      border: 1px solid rgba(14,124,123,0.22); border-radius: 14px;
+      padding: 13px 15px; color: var(--text-bright);
+      font-family: 'Nunito', sans-serif; font-size: 0.87rem; line-height: 1.6;
+      resize: vertical; outline: none; transition: border-color 0.2s; margin-bottom: 9px;
+    }
+    .notes-textarea:focus { border-color: var(--teal-bright); }
+    .notes-textarea::placeholder { color: var(--text-muted); }
+    .save-btn {
+      background: linear-gradient(135deg, var(--teal), var(--royal));
+      border: none; border-radius: 12px; color: white;
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.87rem;
+      padding: 11px 22px; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(14,124,123,0.3); transition: opacity 0.2s, transform 0.15s;
+    }
+    .save-btn:active { transform: scale(0.97); }
+    .saved-note {
+      background: var(--bg-card); border: 1px solid rgba(255,255,255,0.055);
+      border-left: 3px solid var(--teal); border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 8px; animation: fadeUp 0.3s ease both;
+    }
+    .saved-note-date { font-size: 0.64rem; color: var(--text-muted); margin-bottom: 3px; }
+    .saved-note-text { font-size: 0.82rem; color: var(--text-mid); line-height: 1.5; white-space: pre-wrap; }
+
+    /* ═══ SETTINGS ═══ */
+    .settings-group-title { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; color: var(--teal-glow); margin: 18px 0 3px; }
+    .settings-group-sub { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 9px; }
+    .setting-row {
+      background: var(--bg-card); border: 1px solid rgba(255,255,255,0.055);
+      border-radius: 12px; padding: 12px 15px; margin-bottom: 7px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .setting-label { font-size: 0.87rem; font-weight: 600; color: var(--text-bright); }
+    .setting-sub   { font-size: 0.69rem; color: var(--text-muted); margin-top: 2px; }
+    .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: rgba(255,255,255,0.08); border-radius: 99px; cursor: pointer; transition: background 0.3s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.3s; }
+    .toggle input:checked + .toggle-slider { background: var(--teal); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* ═══ BOTTOM NAV ═══ */
+    nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(180deg, rgba(7,13,26,0.82), rgba(7,13,26,0.97));
+      backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(14,124,123,0.18);
+      padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+      z-index: 300;
+    }
+    .nav-inner { max-width: 700px; margin: 0 auto; display: flex; justify-content: space-around; }
+    .nav-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      background: none; border: none; color: var(--text-muted);
+      font-family: 'Nunito', sans-serif; font-size: 0.6rem; font-weight: 700;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      cursor: pointer; padding: 4px 14px; border-radius: 12px; transition: color 0.2s, background 0.2s;
+    }
+    .nav-btn.active { color: var(--teal-bright); background: rgba(14,124,123,0.12); }
+    .nav-icon { font-size: 1.2rem; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(14,124,123,0.3); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <span class="brand-eyebrow">Daily Planner</span>
+        <span class="brand-title">TeacherDay 🦚</span>
+      </div>
+      <div class="date-block">
+        <div class="date-weekday" id="dateWeekday">—</div>
+        <div class="date-full" id="dateFull">—</div>
+      </div>
+    </div>
+    <div>
+      <div class="progress-stats">
+        <span id="progressLabel">— tasks</span>
+        <span style="display:flex;gap:8px;align-items:center;">
+          <span class="progress-pct" id="progressPct">—</span>
+          <button class="reset-btn" onclick="resetCurrentDay()">↺ Reset</button>
+        </span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ DAY TABS ═══ -->
+<div class="day-tab-wrap" id="dayTabWrap" style="display:none;">
+  <div class="day-tabs" id="dayTabs">
+    <button class="day-tab" data-day="0" onclick="selectDay(0)">☀️ Sunday</button>
+    <button class="day-tab" data-day="1" onclick="selectDay(1)">📘 Monday</button>
+    <button class="day-tab" data-day="2" onclick="selectDay(2)">📗 Tuesday</button>
+    <button class="day-tab" data-day="3" onclick="selectDay(3)">📙 Wednesday</button>
+    <button class="day-tab" data-day="4" onclick="selectDay(4)">📕 Thursday</button>
+    <button class="day-tab" data-day="5" onclick="selectDay(5)">📓 Friday</button>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<main>
+
+  <!-- ════ CHECKLIST VIEW ════ -->
+  <div class="view active" id="view-today">
+
+    <!-- Day panels, one per day (Sun=0 … Fri=5) -->
+
+    <!-- SUNDAY -->
+    <div class="day-panel" id="panel-0">
+      <div class="completion" id="done-0"><div class="completion-icon">🦚</div><div class="completion-title">Sunday Done!</div><div class="completion-sub">You're ahead of the week. Wonderful.</div></div>
+
+      <div class="block-header"><span class="block-pill pill-amethyst">🌿 Sunday Planning</span><span class="block-rule"></span><span class="block-time">Anytime</span></div>
+
+      <div class="task-card" style="--accent:#9333EA" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Review the week ahead</span><span class="tag tag-planning">Planning</span></div><div class="task-note">Look at Mon–Fri schedules, meetings, and special events</div></div></div>
+      </div>
+      <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Prep lesson plans for the week</span><span class="tag tag-planning">Planning</span></div><div class="task-note">Objectives, materials, differentiation notes</div></div></div>
+      </div>
+      <div class="task-card" style="--accent:#4338CA" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Gather & organize materials</span><span class="tag tag-copies">Copies</span></div><div class="task-note">Copies, manipulatives, supplies needed for each day</div></div></div>
+      </div>
+      <div class="task-card" style="--accent:#2563EB" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Check email & school announcements</span><span class="tag tag-admin">Admin</span></div><div class="task-note">Any updates before the week starts</div></div></div>
+      </div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🧘 Rest & recharge</span><span class="tag tag-self">Self-care</span></div><div class="task-note">You need rest to give your best. Protect your Sunday time.</div></div></div>
+      </div>
+
+      <div id="custom-list-0"></div>
+      <button class="add-task-btn" onclick="toggleAddForm(0)"><span class="add-icon">＋</span> Add a Sunday task</button>
+      <div class="add-form" id="add-form-0">
+        <div class="add-form-title">New Sunday Task</div>
+        <input class="form-input" id="task-title-0" placeholder="Task name..." />
+        <input class="form-input" id="task-note-0" placeholder="Note or detail (optional)" />
+        <div class="form-row">
+          <select class="form-select" id="task-tag-0">
+            <option value="tag-planning">Planning</option>
+            <option value="tag-copies">Copies</option>
+            <option value="tag-admin">Admin</option>
+            <option value="tag-students">Students</option>
+            <option value="tag-break">Break</option>
+            <option value="tag-self">Self-care</option>
+            <option value="tag-custom">Other</option>
+          </select>
+        </div>
+        <div class="form-btns">
+          <button class="btn-add-confirm" onclick="addTask(0)">Add Task</button>
+          <button class="btn-cancel" onclick="toggleAddForm(0)">Cancel</button>
+        </div>
+      </div>
+    </div><!-- /panel-0 -->
+
+    <!-- MONDAY -->
+    <div class="day-panel" id="panel-1">
+      <div class="completion" id="done-1"><div class="completion-icon">🦚</div><div class="completion-title">Monday Complete!</div><div class="completion-sub">Strong start to the week!</div></div>
+
+      <div class="block-header"><span class="block-pill pill-teal">☀️ Before School</span><span class="block-rule"></span><span class="block-time">7:00–8:00 am</span></div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Review lesson plans & set up classroom</span><span class="tag tag-planning">Planning</span></div></div></div>
+      </div>
+      <div class="task-card" style="--accent:#2563EB" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Make morning copies</span><span class="tag tag-copies">Copies</span></div></div></div>
+      </div>
+      <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Check email & Monday announcements</span><span class="tag tag-admin">Admin</span></div></div></div>
+      </div>
+
+      <div class="block-header"><span class="block-pill pill-teal">📚 Instruction</span><span class="block-rule"></span><span class="block-time">8:00–11:30 am</span></div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Attendance & morning welcome</span><span class="tag tag-students">Students</span></div></div></div>
+      </div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">☕ Morning break</span><span class="tag tag-break">Break</span></div><div class="task-note">10 minutes. Step away and breathe.</div></div></div>
+      </div>
+      <div class="task-card" style="--accent:#1D4ED8" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Deliver Block 1 & Block 2</span><span class="tag tag-planning">Planning</span></div></div></div>
+      </div>
+
+      <div class="block-header"><span class="block-pill pill-emerald">🥗 Lunch</span><span class="block-rule"></span><span class="block-time">11:30–12:30</span></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🍽️ Eat lunch — away from your desk!</span><span class="tag tag-break">Break</span></div></div></div>
+      </div>
+      <div class="task-card" style="--accent:#4338CA" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Monday team/grade-level check-in</span><span class="tag tag-admin">Admin</span></div><div class="task-note">Weekly sync with colleagues if applicable</div></div></div>
+      </div>
+
+      <div class="block-header"><span class="block-pill pill-blue">🔷 Afternoon</span><span class="block-rule"></span><span class="block-time">12:30–3:00</span></div>
+      <div class="task-card" style="--accent:#4338CA" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Deliver afternoon block</span><span class="tag tag-planning">Planning</span></div></div></div>
+      </div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🌿 Afternoon reset — 5 min</span><span class="tag tag-break">Break</span></div></div></div>
+      </div>
+
+      <div class="block-header"><span class="block-pill pill-gold">🌙 End of Day</span><span class="block-rule"></span><span class="block-time">3:00–4:00</span></div>
+      <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Plan Tuesday's lessons</span><span class="tag tag-planning">Planning</span></div></div></div>
+      </div>
+      <div class="task-card" style="--accent:#D97706" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Grade & log student work</span><span class="tag tag-admin">Admin</span></div></div></div>
+      </div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)">
+        <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Reply to emails & reset classroom</span><span class="tag tag-admin">Admin</span></div></div></div>
+      </div>
+
+      <div id="custom-list-1"></div>
+      <button class="add-task-btn" onclick="toggleAddForm(1)"><span class="add-icon">＋</span> Add a Monday task</button>
+      <div class="add-form" id="add-form-1">
+        <div class="add-form-title">New Monday Task</div>
+        <input class="form-input" id="task-title-1" placeholder="Task name..." />
+        <input class="form-input" id="task-note-1" placeholder="Note or detail (optional)" />
+        <div class="form-row"><select class="form-select" id="task-tag-1"><option value="tag-planning">Planning</option><option value="tag-copies">Copies</option><option value="tag-admin">Admin</option><option value="tag-students">Students</option><option value="tag-break">Break</option><option value="tag-self">Self-care</option><option value="tag-custom">Other</option></select></div>
+        <div class="form-btns"><button class="btn-add-confirm" onclick="addTask(1)">Add Task</button><button class="btn-cancel" onclick="toggleAddForm(1)">Cancel</button></div>
+      </div>
+    </div><!-- /panel-1 -->
+
+    <!-- TUESDAY -->
+    <div class="day-panel" id="panel-2">
+      <div class="completion" id="done-2"><div class="completion-icon">🦚</div><div class="completion-title">Tuesday Complete!</div><div class="completion-sub">Halfway through? Almost. Keep going!</div></div>
+
+      <div class="block-header"><span class="block-pill pill-teal">☀️ Before School</span><span class="block-rule"></span><span class="block-time">7:00–8:00 am</span></div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Review plans & set up classroom</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card" style="--accent:#2563EB" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Make Tuesday copies</span><span class="tag tag-copies">Copies</span></div></div></div></div>
+      <div class="task-card" style="--accent:#4338CA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Parent communication follow-ups</span><span class="tag tag-admin">Admin</span></div><div class="task-note">Return calls or emails from Monday</div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-teal">📚 Instruction</span><span class="block-rule"></span><span class="block-time">8:00–11:30 am</span></div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Attendance & morning welcome</span><span class="tag tag-students">Students</span></div></div></div></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">☕ Morning break — 10 min</span><span class="tag tag-break">Break</span></div></div></div></div>
+      <div class="task-card" style="--accent:#1D4ED8" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Deliver Block 1 & Block 2</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Small group / intervention time</span><span class="tag tag-students">Students</span></div><div class="task-note">Pull groups, targeted support, check comprehension</div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-emerald">🥗 Lunch</span><span class="block-rule"></span><span class="block-time">11:30–12:30</span></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🍽️ Eat lunch!</span><span class="tag tag-break">Break</span></div></div></div></div>
+      <div class="task-card" style="--accent:#2563EB" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Make afternoon copies</span><span class="tag tag-copies">Copies</span></div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-blue">🔷 Afternoon</span><span class="block-rule"></span><span class="block-time">12:30–3:00</span></div>
+      <div class="task-card" style="--accent:#4338CA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Deliver afternoon block</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🌿 Afternoon reset</span><span class="tag tag-break">Break</span></div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-gold">🌙 End of Day</span><span class="block-rule"></span><span class="block-time">3:00–4:00</span></div>
+      <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Plan Wednesday's lessons</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card" style="--accent:#D97706" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Grade & log student work</span><span class="tag tag-admin">Admin</span></div></div></div></div>
+
+      <div id="custom-list-2"></div>
+      <button class="add-task-btn" onclick="toggleAddForm(2)"><span class="add-icon">＋</span> Add a Tuesday task</button>
+      <div class="add-form" id="add-form-2">
+        <div class="add-form-title">New Tuesday Task</div>
+        <input class="form-input" id="task-title-2" placeholder="Task name..." />
+        <input class="form-input" id="task-note-2" placeholder="Note or detail (optional)" />
+        <div class="form-row"><select class="form-select" id="task-tag-2"><option value="tag-planning">Planning</option><option value="tag-copies">Copies</option><option value="tag-admin">Admin</option><option value="tag-students">Students</option><option value="tag-break">Break</option><option value="tag-self">Self-care</option><option value="tag-custom">Other</option></select></div>
+        <div class="form-btns"><button class="btn-add-confirm" onclick="addTask(2)">Add Task</button><button class="btn-cancel" onclick="toggleAddForm(2)">Cancel</button></div>
+      </div>
+    </div><!-- /panel-2 -->
+
+    <!-- WEDNESDAY -->
+    <div class="day-panel" id="panel-3">
+      <div class="completion" id="done-3"><div class="completion-icon">🦚</div><div class="completion-title">Wednesday Done!</div><div class="completion-sub">Over the hump — brilliant work.</div></div>
+
+      <div class="block-header"><span class="block-pill pill-teal">☀️ Before School</span><span class="block-rule"></span><span class="block-time">7:00–8:00 am</span></div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Review plans & set up classroom</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card" style="--accent:#2563EB" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Make Wednesday copies</span><span class="tag tag-copies">Copies</span></div></div></div></div>
+      <div class="task-card" style="--accent:#4338CA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">IEP / 504 check — any meetings today?</span><span class="tag tag-admin">Admin</span></div><div class="task-note">Review accommodations, prep documentation</div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-teal">📚 Instruction</span><span class="block-rule"></span><span class="block-time">8:00–11:30 am</span></div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Attendance & morning welcome</span><span class="tag tag-students">Students</span></div></div></div></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">☕ Morning break</span><span class="tag tag-break">Break</span></div></div></div></div>
+      <div class="task-card" style="--accent:#1D4ED8" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Deliver Block 1 & Block 2</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Mid-week assessment check-in</span><span class="tag tag-students">Students</span></div><div class="task-note">Quick formative check — who needs more support?</div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-emerald">🥗 Lunch</span><span class="block-rule"></span><span class="block-time">11:30–12:30</span></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🍽️ Eat lunch!</span><span class="tag tag-break">Break</span></div></div></div></div>
+      <div class="task-card" style="--accent:#9333EA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Staff meeting / PD (if scheduled)</span><span class="tag tag-admin">Admin</span></div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-blue">🔷 Afternoon</span><span class="block-rule"></span><span class="block-time">12:30–3:00</span></div>
+      <div class="task-card" style="--accent:#4338CA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Deliver afternoon block</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🌿 Afternoon reset</span><span class="tag tag-break">Break</span></div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-gold">🌙 End of Day</span><span class="block-rule"></span><span class="block-time">3:00–4:00</span></div>
+      <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Plan Thursday & Friday lessons</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card" style="--accent:#D97706" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Grade & log student work</span><span class="tag tag-admin">Admin</span></div></div></div></div>
+
+      <div id="custom-list-3"></div>
+      <button class="add-task-btn" onclick="toggleAddForm(3)"><span class="add-icon">＋</span> Add a Wednesday task</button>
+      <div class="add-form" id="add-form-3">
+        <div class="add-form-title">New Wednesday Task</div>
+        <input class="form-input" id="task-title-3" placeholder="Task name..." />
+        <input class="form-input" id="task-note-3" placeholder="Note or detail (optional)" />
+        <div class="form-row"><select class="form-select" id="task-tag-3"><option value="tag-planning">Planning</option><option value="tag-copies">Copies</option><option value="tag-admin">Admin</option><option value="tag-students">Students</option><option value="tag-break">Break</option><option value="tag-self">Self-care</option><option value="tag-custom">Other</option></select></div>
+        <div class="form-btns"><button class="btn-add-confirm" onclick="addTask(3)">Add Task</button><button class="btn-cancel" onclick="toggleAddForm(3)">Cancel</button></div>
+      </div>
+    </div><!-- /panel-3 -->
+
+    <!-- THURSDAY -->
+    <div class="day-panel" id="panel-4">
+      <div class="completion" id="done-4"><div class="completion-icon">🦚</div><div class="completion-title">Thursday Done!</div><div class="completion-sub">One day left — you're almost there!</div></div>
+
+      <div class="block-header"><span class="block-pill pill-teal">☀️ Before School</span><span class="block-rule"></span><span class="block-time">7:00–8:00 am</span></div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Review plans & set up classroom</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card" style="--accent:#2563EB" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Make Thursday copies</span><span class="tag tag-copies">Copies</span></div></div></div></div>
+      <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Check for any Friday events to prep</span><span class="tag tag-planning">Planning</span></div><div class="task-note">Field trips, assemblies, guest speakers, early release</div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-teal">📚 Instruction</span><span class="block-rule"></span><span class="block-time">8:00–11:30 am</span></div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Attendance & morning welcome</span><span class="tag tag-students">Students</span></div></div></div></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">☕ Morning break</span><span class="tag tag-break">Break</span></div></div></div></div>
+      <div class="task-card" style="--accent:#1D4ED8" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Deliver Block 1 & Block 2</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-emerald">🥗 Lunch</span><span class="block-rule"></span><span class="block-time">11:30–12:30</span></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🍽️ Eat lunch!</span><span class="tag tag-break">Break</span></div></div></div></div>
+      <div class="task-card" style="--accent:#9333EA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Progress monitoring / data check</span><span class="tag tag-students">Students</span></div><div class="task-note">Where are students relative to weekly goals?</div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-blue">🔷 Afternoon</span><span class="block-rule"></span><span class="block-time">12:30–3:00</span></div>
+      <div class="task-card" style="--accent:#4338CA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Deliver afternoon block</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🌿 Afternoon reset</span><span class="tag tag-break">Break</span></div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-gold">🌙 End of Day</span><span class="block-rule"></span><span class="block-time">3:00–4:00</span></div>
+      <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Prep & finalize Friday plans</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card" style="--accent:#D97706" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Grade & log student work</span><span class="tag tag-admin">Admin</span></div></div></div></div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Reply to emails & parent messages</span><span class="tag tag-admin">Admin</span></div></div></div></div>
+
+      <div id="custom-list-4"></div>
+      <button class="add-task-btn" onclick="toggleAddForm(4)"><span class="add-icon">＋</span> Add a Thursday task</button>
+      <div class="add-form" id="add-form-4">
+        <div class="add-form-title">New Thursday Task</div>
+        <input class="form-input" id="task-title-4" placeholder="Task name..." />
+        <input class="form-input" id="task-note-4" placeholder="Note or detail (optional)" />
+        <div class="form-row"><select class="form-select" id="task-tag-4"><option value="tag-planning">Planning</option><option value="tag-copies">Copies</option><option value="tag-admin">Admin</option><option value="tag-students">Students</option><option value="tag-break">Break</option><option value="tag-self">Self-care</option><option value="tag-custom">Other</option></select></div>
+        <div class="form-btns"><button class="btn-add-confirm" onclick="addTask(4)">Add Task</button><button class="btn-cancel" onclick="toggleAddForm(4)">Cancel</button></div>
+      </div>
+    </div><!-- /panel-4 -->
+
+    <!-- FRIDAY -->
+    <div class="day-panel" id="panel-5">
+      <div class="completion" id="done-5"><div class="completion-icon">🦚</div><div class="completion-title">Friday Complete!</div><div class="completion-sub">You made it through the whole week. Spectacular.</div></div>
+
+      <div class="block-header"><span class="block-pill pill-teal">☀️ Before School</span><span class="block-rule"></span><span class="block-time">7:00–8:00 am</span></div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Review Friday plans & set up</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card" style="--accent:#2563EB" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Make Friday copies</span><span class="tag tag-copies">Copies</span></div></div></div></div>
+      <div class="task-card" style="--accent:#9333EA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Begin thinking about next week</span><span class="tag tag-planning">Planning</span></div><div class="task-note">Jot ideas, note what worked and what didn't this week</div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-teal">📚 Instruction</span><span class="block-rule"></span><span class="block-time">8:00–11:30 am</span></div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Attendance & morning welcome</span><span class="tag tag-students">Students</span></div></div></div></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">☕ Morning break</span><span class="tag tag-break">Break</span></div></div></div></div>
+      <div class="task-card" style="--accent:#1D4ED8" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Deliver Block 1 & Block 2</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Friday class celebration / SEL check-in</span><span class="tag tag-students">Students</span></div><div class="task-note">Shoutouts, highlights, community circle</div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-emerald">🥗 Lunch</span><span class="block-rule"></span><span class="block-time">11:30–12:30</span></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🍽️ Eat lunch — celebrate Friday!</span><span class="tag tag-break">Break</span></div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-blue">🔷 Afternoon</span><span class="block-rule"></span><span class="block-time">12:30–3:00</span></div>
+      <div class="task-card" style="--accent:#4338CA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Deliver afternoon block</span><span class="tag tag-planning">Planning</span></div></div></div></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🌿 Afternoon reset</span><span class="tag tag-break">Break</span></div></div></div></div>
+
+      <div class="block-header"><span class="block-pill pill-gold">🌙 End of Week</span><span class="block-rule"></span><span class="block-time">3:00–4:00</span></div>
+      <div class="task-card" style="--accent:#D97706" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Grade & finalize the week's work</span><span class="tag tag-admin">Admin</span></div></div></div></div>
+      <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Clean & prep classroom for Monday</span><span class="tag tag-students">Students</span></div></div></div></div>
+      <div class="task-card" style="--accent:#9333EA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Outline next week's plans</span><span class="tag tag-planning">Planning</span></div><div class="task-note">Even rough notes will make Sunday easier</div></div></div></div>
+      <div class="task-card break-style" style="--accent:#9333EA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">✨ Name one win from this week</span><span class="tag tag-self">Self-care</span></div><div class="task-note">You showed up all week. That matters.</div></div></div></div>
+
+      <div id="custom-list-5"></div>
+      <button class="add-task-btn" onclick="toggleAddForm(5)"><span class="add-icon">＋</span> Add a Friday task</button>
+      <div class="add-form" id="add-form-5">
+        <div class="add-form-title">New Friday Task</div>
+        <input class="form-input" id="task-title-5" placeholder="Task name..." />
+        <input class="form-input" id="task-note-5" placeholder="Note or detail (optional)" />
+        <div class="form-row"><select class="form-select" id="task-tag-5"><option value="tag-planning">Planning</option><option value="tag-copies">Copies</option><option value="tag-admin">Admin</option><option value="tag-students">Students</option><option value="tag-break">Break</option><option value="tag-self">Self-care</option><option value="tag-custom">Other</option></select></div>
+        <div class="form-btns"><button class="btn-add-confirm" onclick="addTask(5)">Add Task</button><button class="btn-cancel" onclick="toggleAddForm(5)">Cancel</button></div>
+      </div>
+    </div><!-- /panel-5 -->
+
+    <div class="quote-block" id="quoteBlock">
+      <div class="quote-text" id="quoteText">"Teaching is the one profession that creates all other professions."</div>
+      <div class="quote-sub">Your daily reminder 🦚</div>
+    </div>
+
+  </div><!-- /view-today -->
+
+
+  <!-- ════ NOTES VIEW ════ -->
+  <div class="view" id="view-notes">
+    <div class="page-title">Quick Notes</div>
+    <div class="page-sub">Jot anything — ideas, observations, reminders</div>
+    <textarea class="notes-textarea" id="noteInput" placeholder="Parent call to make, student to watch, supply needed, lesson idea..."></textarea>
+    <button class="save-btn" onclick="saveNote()">Save Note</button>
+    <div style="margin-top:18px;" id="savedNotesList"></div>
+  </div>
+
+  <!-- ════ SETTINGS VIEW ════ -->
+  <div class="view" id="view-settings">
+    <div class="page-title">Settings</div>
+    <div class="page-sub">Customize your TeacherDay experience</div>
+
+    <div class="settings-group-title">Reminders</div>
+    <div class="settings-group-sub">Helpful nudges throughout your day</div>
+    <div class="setting-row"><div><div class="setting-label">Morning reminder</div><div class="setting-sub">Alert at 7:00 am to start your checklist</div></div><label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label></div>
+    <div class="setting-row"><div><div class="setting-label">Break reminders</div><div class="setting-sub">Nudge to actually take your breaks</div></div><label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label></div>
+    <div class="setting-row"><div><div class="setting-label">End-of-day wrap-up</div><div class="setting-sub">Alert at 3:15 pm to begin winding down</div></div><label class="toggle"><input type="checkbox" /><span class="toggle-slider"></span></label></div>
+
+    <div class="settings-group-title">Behavior</div>
+    <div class="settings-group-sub">How the app manages your lists</div>
+    <div class="setting-row"><div><div class="setting-label">Auto-reset checkmarks daily</div><div class="setting-sub">Clears check marks each new day (custom tasks stay)</div></div><label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label></div>
+    <div class="setting-row"><div><div class="setting-label">Open to today's day automatically</div><div class="setting-sub">Jumps to the current day when you open the app</div></div><label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label></div>
+
+    <div class="settings-group-title">About</div>
+    <div class="setting-row"><div><div class="setting-label">TeacherDay</div><div class="setting-sub">Version 2.0 · Built for educators who give everything</div></div><span style="font-size:1.6rem;">🦚</span></div>
+  </div>
+
+</main>
+
+<!-- ═══ BOTTOM NAV ═══ -->
+<nav>
+  <div class="nav-inner">
+    <button class="nav-btn active" id="nav-today" onclick="switchView('today')"><span class="nav-icon">✅</span>Tasks</button>
+    <button class="nav-btn" id="nav-notes" onclick="switchView('notes')"><span class="nav-icon">📝</span>Notes</button>
+    <button class="nav-btn" id="nav-settings" onclick="switchView('settings')"><span class="nav-icon">⚙️</span>Settings</button>
+  </div>
+</nav>
+
+<script>
+  // ═══════════════════════════════════════════════════════
+  // SUPABASE CONFIG
+  // ═══════════════════════════════════════════════════════
+  const SUPA_URL = 'https://yuxnoqatffayggqoohco.supabase.co';
+  const SUPA_KEY = 'sb_publishable_ml5El3bIBGNeHr8VSgskOg_EwC2Wnkm';
+
+  async function sbFetch(path, method = 'GET', body = null, extra = '') {
+    const opts = {
+      method,
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': method === 'POST' ? 'return=representation' : ''
+      }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(SUPA_URL + '/rest/v1/' + path + extra, opts);
+    if (!res.ok) { const t = await res.text(); console.error('Supabase error:', t); return null; }
+    if (method === 'DELETE' || res.status === 204) return true;
+    return res.json();
+  }
+
+  // ── CONSTANTS ──────────────────────────────────────────
+  const DAY_NAMES  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'];
+  const MONTHS     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const TAG_LABELS = { 'tag-planning':'Planning','tag-copies':'Copies','tag-admin':'Admin','tag-students':'Students','tag-break':'Break','tag-self':'Self-care','tag-custom':'Other' };
+  const ACCENT_MAP = { 'tag-planning':'#7C3AED','tag-copies':'#2563EB','tag-admin':'#D97706','tag-students':'#0E7C7B','tag-break':'#059669','tag-self':'#9333EA','tag-custom':'#14B8A6' };
+  const QUOTES = [
+    '"Teaching is the one profession that creates all other professions."',
+    '"Education is not the filling of a pail, but the lighting of a fire." — W.B. Yeats',
+    '"The art of teaching is the art of assisting discovery." — Mark Van Doren',
+    '"Teachers plant seeds of knowledge that grow forever."',
+    '"One child, one teacher, one book can change the world." — Malala',
+    '"In learning you will teach, and in teaching you will learn."',
+    '"Every student can learn — just not on the same day, or in the same way."',
+  ];
+
+  // ── APP STATE ──────────────────────────────────────────
+  const now          = new Date();
+  const todayStr     = now.toISOString().slice(0,10); // "2025-05-02"
+  const realDayIndex = Math.min(now.getDay(), 5);
+  let   activeDay    = realDayIndex;
+
+  // In-memory cache so UI stays fast
+  let customCache = {};   // { day: [ {id, title, note, tag}, … ] }
+  let checkCache  = {};   // { day: { checks: {…} } }
+
+  // ── DATE / QUOTE ───────────────────────────────────────
+  document.getElementById('dateWeekday').textContent = DAY_NAMES[realDayIndex];
+  document.getElementById('dateFull').textContent    = MONTHS[now.getMonth()] + ' ' + now.getDate();
+  document.getElementById('quoteText').textContent   = QUOTES[now.getDay() % QUOTES.length];
+  const todayTabEl = document.querySelector(`.day-tab[data-day="${realDayIndex}"]`);
+  if (todayTabEl) todayTabEl.classList.add('today-tab');
+  document.getElementById('dayTabWrap').style.display = '';
+
+  // ── BOOT — load everything from Supabase ───────────────
+  async function boot() {
+    showToast('Loading your data… 🦚', false);
+    try {
+      // Load custom tasks (all days)
+      const tasks = await sbFetch('custom_tasks?select=*&order=id.asc');
+      if (tasks) {
+        DAY_NAMES.forEach((_, d) => { customCache[d] = []; });
+        tasks.forEach(t => {
+          const d = t.day;
+          if (d >= 0 && d <= 5) customCache[d].push(t);
+        });
+      }
+
+      // Load today's checks for all days
+      const checks = await sbFetch(`daily_checks?check_date=eq.${todayStr}&select=*`);
+      if (checks) {
+        checks.forEach(row => { checkCache[row.day] = row; });
+      }
+    } catch(e) {
+      console.error('Boot error:', e);
+    }
+
+    // Render UI
+    DAY_NAMES.forEach((_, d) => renderCustomTasks(d));
+    DAY_NAMES.forEach((_, d) => applyChecks(d));
+    selectDay(activeDay);
+    hideToast();
+  }
+
+  boot();
+
+  // ── SELECT DAY ─────────────────────────────────────────
+  function selectDay(d) {
+    activeDay = d;
+    document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+    const panel = document.getElementById('panel-' + d);
+    const tab   = document.querySelector(`.day-tab[data-day="${d}"]`);
+    if (panel) panel.classList.add('active');
+    if (tab)   { tab.classList.add('active'); tab.scrollIntoView({ inline:'center', behavior:'smooth' }); }
+    updateProgress();
+  }
+
+  // ── APPLY CHECKS TO UI ─────────────────────────────────
+  function applyChecks(d) {
+    const checks = (checkCache[d] && checkCache[d].checks) ? checkCache[d].checks : {};
+    const panel  = document.getElementById('panel-' + d);
+    if (!panel) return;
+    panel.querySelectorAll('.task-card').forEach((card, i) => {
+      if (checks[i]) card.classList.add('done');
+      else card.classList.remove('done');
+    });
+    updateCompletionBanner(d);
+  }
+
+  // ── TOGGLE TASK ────────────────────────────────────────
+  async function toggleCard(card) {
+    card.classList.toggle('done');
+    const panel = card.closest('.day-panel');
+    const d     = parseInt(panel.id.replace('panel-',''));
+    const checks = {};
+    panel.querySelectorAll('.task-card').forEach((c, i) => { checks[i] = c.classList.contains('done'); });
+
+    // Update cache immediately for snappy UI
+    if (!checkCache[d]) checkCache[d] = {};
+    checkCache[d].checks = checks;
+
+    updateCompletionBanner(d);
+    if (d === activeDay) updateProgress();
+
+    // Save to Supabase (upsert — insert or update)
+    try {
+      if (checkCache[d] && checkCache[d].id) {
+        // Update existing row
+        await sbFetch(`daily_checks?id=eq.${checkCache[d].id}`, 'PATCH', { checks });
+      } else {
+        // Insert new row
+        const result = await sbFetch('daily_checks', 'POST', { day: d, check_date: todayStr, checks });
+        if (result && result[0]) checkCache[d] = result[0];
+      }
+    } catch(e) { console.error('Save checks error:', e); }
+  }
+
+  // ── PROGRESS BAR ───────────────────────────────────────
+  function updateProgress() {
+    const panel = document.getElementById('panel-' + activeDay);
+    if (!panel) return;
+    const all  = panel.querySelectorAll('.task-card');
+    const done = panel.querySelectorAll('.task-card.done').length;
+    const pct  = all.length ? Math.round((done / all.length) * 100) : 0;
+    document.getElementById('progressFill').style.width  = pct + '%';
+    document.getElementById('progressLabel').textContent  = done + ' of ' + all.length + ' tasks';
+    document.getElementById('progressPct').textContent    = pct + '%';
+  }
+
+  // ── COMPLETION BANNER ──────────────────────────────────
+  function updateCompletionBanner(d) {
+    const panel  = document.getElementById('panel-' + d);
+    const banner = document.getElementById('done-' + d);
+    if (!panel || !banner) return;
+    const all  = panel.querySelectorAll('.task-card').length;
+    const done = panel.querySelectorAll('.task-card.done').length;
+    if (done > 0 && done === all) banner.classList.add('show');
+    else banner.classList.remove('show');
+  }
+
+  // ── RESET DAY ──────────────────────────────────────────
+  async function resetCurrentDay() {
+    if (!confirm(`Reset all tasks for ${DAY_NAMES[activeDay]}?`)) return;
+    const panel = document.getElementById('panel-' + activeDay);
+    if (!panel) return;
+    panel.querySelectorAll('.task-card').forEach(c => c.classList.remove('done'));
+    const d = activeDay;
+    if (checkCache[d] && checkCache[d].id) {
+      await sbFetch(`daily_checks?id=eq.${checkCache[d].id}`, 'PATCH', { checks: {} });
+      checkCache[d].checks = {};
+    }
+    updateProgress();
+    updateCompletionBanner(d);
+  }
+
+  // ── ADD TASK FORM ──────────────────────────────────────
+  function toggleAddForm(d) {
+    const form = document.getElementById('add-form-' + d);
+    form.classList.toggle('open');
+    if (form.classList.contains('open')) document.getElementById('task-title-' + d).focus();
+  }
+
+  async function addTask(d) {
+    const titleEl = document.getElementById('task-title-' + d);
+    const noteEl  = document.getElementById('task-note-' + d);
+    const tagEl   = document.getElementById('task-tag-' + d);
+    const title   = titleEl.value.trim();
+    if (!title) { titleEl.focus(); return; }
+
+    const newTask = { day: d, title, note: noteEl.value.trim(), tag: tagEl.value };
+
+    // Optimistic UI
+    if (!customCache[d]) customCache[d] = [];
+    const tempId = Date.now();
+    customCache[d].push({ ...newTask, id: tempId });
+    renderCustomTasks(d);
+    applyChecks(d);
+    titleEl.value = ''; noteEl.value = '';
+    toggleAddForm(d);
+    updateProgress();
+
+    // Save to Supabase
+    try {
+      const result = await sbFetch('custom_tasks', 'POST', newTask);
+      if (result && result[0]) {
+        // Replace temp id with real id
+        const idx = customCache[d].findIndex(t => t.id === tempId);
+        if (idx > -1) customCache[d][idx] = result[0];
+        renderCustomTasks(d);
+        applyChecks(d);
+      }
+      showToast('Task saved to cloud ✓');
+    } catch(e) { console.error('Add task error:', e); }
+  }
+
+  // ── RENDER CUSTOM TASKS ────────────────────────────────
+  function renderCustomTasks(d) {
+    const list = document.getElementById('custom-list-' + d);
+    if (!list) return;
+    const customs = customCache[d] || [];
+    list.innerHTML = customs.map(t => {
+      const accent = ACCENT_MAP[t.tag] || '#14B8A6';
+      const label  = TAG_LABELS[t.tag] || 'Other';
+      return `
+        <div class="task-card custom-card" style="--accent:${accent}" data-custom-id="${t.id}" onclick="toggleCard(this)">
+          <div class="check-area">
+            <div class="check"><span class="check-mark">✓</span></div>
+            <div class="task-body">
+              <div class="task-row">
+                <span class="task-title">${escHtml(t.title)}</span>
+                <span class="tag ${t.tag}">${label}</span>
+              </div>
+              ${t.note ? `<div class="task-note">${escHtml(t.note)}</div>` : ''}
+            </div>
+          </div>
+          <button class="delete-btn" onclick="deleteTask(event,${d},${t.id})" title="Delete task">✕</button>
+        </div>`;
+    }).join('');
+  }
+
+  // ── DELETE CUSTOM TASK ─────────────────────────────────
+  async function deleteTask(e, d, id) {
+    e.stopPropagation();
+    if (!confirm('Delete this task?')) return;
+    customCache[d] = (customCache[d] || []).filter(t => t.id !== id);
+    renderCustomTasks(d);
+    applyChecks(d);
+    updateProgress();
+    updateCompletionBanner(d);
+    try {
+      await sbFetch(`custom_tasks?id=eq.${id}`, 'DELETE');
+      showToast('Task deleted ✓');
+    } catch(e) { console.error('Delete error:', e); }
+  }
+
+  // ── VIEWS ──────────────────────────────────────────────
+  function switchView(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+    document.getElementById('nav-' + name).classList.add('active');
+    document.getElementById('dayTabWrap').style.display = name === 'today' ? '' : 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (name === 'notes') renderNotes();
+    if (name === 'today') updateProgress();
+  }
+
+  // ── NOTES ──────────────────────────────────────────────
+  async function saveNote() {
+    const text = document.getElementById('noteInput').value.trim();
+    if (!text) return;
+    document.getElementById('noteInput').value = '';
+    try {
+      await sbFetch('notes', 'POST', { text });
+      showToast('Note saved to cloud ✓');
+      renderNotes();
+    } catch(e) { console.error('Save note error:', e); }
+  }
+
+  async function renderNotes() {
+    const list = document.getElementById('savedNotesList');
+    list.innerHTML = '<p style="color:var(--text-muted);font-size:.8rem;text-align:center;margin-top:12px;">Loading notes…</p>';
+    try {
+      const notes = await sbFetch('notes?select=*&order=created_at.desc&limit=50');
+      if (!notes || notes.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted);font-size:.8rem;text-align:center;margin-top:20px;">No notes yet — add your first one above!</p>';
+        return;
+      }
+      list.innerHTML = notes.map(n => {
+        const d = new Date(n.created_at).toLocaleString();
+        return `<div class="saved-note">
+          <div class="saved-note-date">${d}</div>
+          <div class="saved-note-text">${escHtml(n.text)}</div>
+        </div>`;
+      }).join('');
+    } catch(e) { list.innerHTML = '<p style="color:var(--text-muted);font-size:.8rem;text-align:center;">Could not load notes.</p>'; }
+  }
+
+  // ── TOAST NOTIFICATION ─────────────────────────────────
+  let toastTimer;
+  function showToast(msg, autoHide = true) {
+    let toast = document.getElementById('toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'toast';
+      toast.style.cssText = `
+        position:fixed; bottom:100px; left:50%; transform:translateX(-50%);
+        background:linear-gradient(135deg,#0E7C7B,#4338CA);
+        color:white; padding:10px 20px; border-radius:99px;
+        font-family:'Nunito',sans-serif; font-size:.8rem; font-weight:700;
+        box-shadow:0 4px 20px rgba(14,124,123,0.4); z-index:999;
+        transition:opacity 0.3s; white-space:nowrap;`;
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    clearTimeout(toastTimer);
+    if (autoHide) toastTimer = setTimeout(hideToast, 2500);
+  }
+  function hideToast() {
+    const toast = document.getElementById('toast');
+    if (toast) toast.style.opacity = '0';
+  }
+
+  // ── UTILS ──────────────────────────────────────────────
+  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // ── SERVICE WORKER ─────────────────────────────────────
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+</script>
+</body>
+</html>
