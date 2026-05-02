@@ -433,6 +433,7 @@
     <button class="day-tab" data-day="3" onclick="selectDay(3)">📙 Wednesday</button>
     <button class="day-tab" data-day="4" onclick="selectDay(4)">📕 Thursday</button>
     <button class="day-tab" data-day="5" onclick="selectDay(5)">📓 Friday</button>
+    <button class="day-tab" data-day="6" onclick="selectDay(6)">🌸 Saturday</button>
   </div>
 </div>
 
@@ -707,6 +708,28 @@
       </div>
     </div><!-- /panel-5 -->
 
+    <!-- SATURDAY -->
+    <div class="day-panel" id="panel-6">
+      <div class="completion" id="done-6"><div class="completion-icon">🦚</div><div class="completion-title">Saturday Done!</div><div class="completion-sub">Weekend warrior. Enjoy the rest of your day!</div></div>
+      <div class="block-header"><span class="block-pill pill-amethyst">🌸 Saturday — Weekend</span><span class="block-rule"></span><span class="block-time">Your time</span></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🛌 Sleep in &amp; rest</span><span class="tag tag-self">Self-care</span></div><div class="task-note">You earned it. Rest is productive.</div></div></div></div>
+      <div class="task-card break-style" style="--accent:#9333EA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🚶 Get outside — move your body</span><span class="tag tag-self">Self-care</span></div><div class="task-note">Walk, stretch, breathe fresh air</div></div></div></div>
+      <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Quick week reflection</span><span class="tag tag-planning">Planning</span></div><div class="task-note">What went well? What would you do differently?</div></div></div></div>
+      <div class="task-card" style="--accent:#4338CA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Light next-week brain dump</span><span class="tag tag-planning">Planning</span></div><div class="task-note">Jot any ideas while fresh — keep it light!</div></div></div></div>
+      <div class="task-card" style="--accent:#D97706" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Any school errands or supply run</span><span class="tag tag-admin">Admin</span></div><div class="task-note">Grab anything you need before Sunday prep</div></div></div></div>
+      <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🍽️ Enjoy a meal you love</span><span class="tag tag-self">Self-care</span></div><div class="task-note">Cook, order, or go out — you deserve it</div></div></div></div>
+      <div class="task-card break-style" style="--accent:#9333EA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">✨ Do something just for you</span><span class="tag tag-self">Self-care</span></div><div class="task-note">A hobby, a friend, a movie — full permission to enjoy.</div></div></div></div>
+      <div id="custom-list-6"></div>
+      <button class="add-task-btn" onclick="toggleAddForm(6)"><span class="add-icon">＋</span> Add a Saturday task</button>
+      <div class="add-form" id="add-form-6">
+        <div class="add-form-title">New Saturday Task</div>
+        <input class="form-input" id="task-title-6" placeholder="Task name..." />
+        <input class="form-input" id="task-note-6" placeholder="Note or detail (optional)" />
+        <div class="form-row"><select class="form-select" id="task-tag-6"><option value="tag-planning">Planning</option><option value="tag-copies">Copies</option><option value="tag-admin">Admin</option><option value="tag-students">Students</option><option value="tag-break">Break</option><option value="tag-self">Self-care</option><option value="tag-custom">Other</option></select></div>
+        <div class="form-btns"><button class="btn-add-confirm" onclick="addTask(6)">Add Task</button><button class="btn-cancel" onclick="toggleAddForm(6)">Cancel</button></div>
+      </div>
+    </div><!-- /panel-6 -->
+
     <div class="quote-block" id="quoteBlock">
       <div class="quote-text" id="quoteText">"Teaching is the one profession that creates all other professions."</div>
       <div class="quote-sub">Your daily reminder 🦚</div>
@@ -780,7 +803,7 @@
   }
 
   // ── CONSTANTS ──────────────────────────────────────────
-  const DAY_NAMES  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'];
+  const DAY_NAMES  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const MONTHS     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const TAG_LABELS = { 'tag-planning':'Planning','tag-copies':'Copies','tag-admin':'Admin','tag-students':'Students','tag-break':'Break','tag-self':'Self-care','tag-custom':'Other' };
   const ACCENT_MAP = { 'tag-planning':'#7C3AED','tag-copies':'#2563EB','tag-admin':'#D97706','tag-students':'#0E7C7B','tag-break':'#059669','tag-self':'#9333EA','tag-custom':'#14B8A6' };
@@ -797,7 +820,7 @@
   // ── APP STATE ──────────────────────────────────────────
   const now          = new Date();
   const todayStr     = now.toISOString().slice(0,10); // "2025-05-02"
-  const realDayIndex = Math.min(now.getDay(), 5);
+  const realDayIndex = now.getDay(); // 0=Sun … 6=Sat
   let   activeDay    = realDayIndex;
 
   // In-memory cache so UI stays fast
