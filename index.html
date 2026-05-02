@@ -394,11 +394,118 @@
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(14,124,123,0.3); border-radius: 99px; }
+
+    /* ── WINS COUNTER (replaces "0 of N tasks") ── */
+    .wins-label { color: var(--gold-lt); font-weight: 700; }
+
+    /* ── CONFETTI CANVAS ── */
+    #confetti-canvas {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 9999; opacity: 0;
+      transition: opacity 0.3s;
+    }
+    #confetti-canvas.active { opacity: 1; }
+
+    /* ── CHECK GLOW ANIMATION ── */
+    @keyframes checkGlow {
+      0%   { box-shadow: 0 0 0 0 rgba(94,234,212,0.6); transform: scale(1); }
+      50%  { box-shadow: 0 0 0 12px rgba(94,234,212,0); transform: scale(1.15); }
+      100% { box-shadow: 0 0 0 0 rgba(94,234,212,0); transform: scale(1.08); }
+    }
+    .task-card.just-checked .check { animation: checkGlow 0.5s ease forwards; }
+
+    /* ── BARE MINIMUM MODE ── */
+    .bare-min-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 16px; margin: 8px 0;
+      background: linear-gradient(135deg, rgba(217,119,6,0.12), rgba(124,58,237,0.1));
+      border: 1px solid rgba(217,119,6,0.25); border-radius: 12px;
+      font-size: 0.78rem; color: var(--text-mid);
+      animation: fadeUp 0.3s ease both;
+    }
+    .bare-min-bar strong { color: var(--gold-lt); }
+    .bare-min-toggle-wrap { display: flex; align-items: center; gap: 8px; }
+    .bare-label { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* Hide non-essential tasks in bare minimum mode */
+    body.bare-min .task-card:not(.break-style):not(.bare-essential) { display: none; }
+    body.bare-min .block-header { opacity: 0.4; }
+
+    /* ── TOP 3 FOCUS BOX ── */
+    .focus-box {
+      background: linear-gradient(135deg, rgba(14,124,123,0.12), rgba(37,99,235,0.1));
+      border: 1px solid rgba(94,234,212,0.2); border-radius: 16px;
+      padding: 14px 16px; margin-bottom: 16px;
+      animation: fadeUp 0.3s ease both;
+    }
+    .focus-box-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .focus-box-title {
+      font-family: 'Cormorant Garamond', serif; font-size: 1rem;
+      color: var(--teal-glow); font-weight: 700;
+    }
+    .focus-box-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 1px; }
+    .focus-item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 9px 12px; margin-bottom: 7px;
+    }
+    .focus-item:last-child { margin-bottom: 0; }
+    .focus-num {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--teal), var(--royal));
+      color: white; font-size: 0.7rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .focus-input {
+      flex: 1; background: none; border: none; outline: none;
+      font-family: 'Nunito', sans-serif; font-size: 0.88rem;
+      color: var(--text-bright); placeholder-color: var(--text-muted);
+    }
+    .focus-input::placeholder { color: var(--text-muted); }
+
+    /* ── END OF DAY REFLECTION ── */
+    .reflection-box {
+      background: linear-gradient(135deg, rgba(147,51,234,0.1), rgba(14,124,123,0.08));
+      border: 1px solid rgba(147,51,234,0.2); border-radius: 16px;
+      padding: 16px; margin-top: 16px;
+      animation: fadeUp 0.4s ease both;
+    }
+    .reflection-title {
+      font-family: 'Cormorant Garamond', serif; font-size: 1rem;
+      color: #E9D5FF; margin-bottom: 12px; font-weight: 700;
+    }
+    .reflection-q { margin-bottom: 10px; }
+    .reflection-q label {
+      display: block; font-size: 0.72rem; color: var(--text-muted);
+      font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .reflection-q textarea {
+      width: 100%; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 9px 12px; color: var(--text-bright);
+      font-family: 'Nunito', sans-serif; font-size: 0.85rem; line-height: 1.5;
+      resize: none; outline: none; min-height: 60px; transition: border-color 0.2s;
+    }
+    .reflection-q textarea:focus { border-color: var(--amethyst); }
+    .reflection-q textarea::placeholder { color: var(--text-muted); }
+    .reflection-save-btn {
+      background: linear-gradient(135deg, var(--violet), var(--amethyst));
+      border: none; border-radius: 10px; color: white;
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.82rem;
+      padding: 9px 20px; cursor: pointer; margin-top: 4px;
+      box-shadow: 0 3px 14px rgba(124,58,237,0.3);
+    }
+    .reflection-save-btn:active { opacity: 0.85; transform: scale(0.97); }
+
   </style>
 </head>
 <body>
 
 <!-- ═══ HEADER ═══ -->
+<canvas id="confetti-canvas"></canvas>
 <header>
   <div class="header-inner">
     <div class="header-top">
@@ -420,6 +527,21 @@
         </span>
       </div>
       <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+      <!-- Bare Minimum Mode -->
+      <div class="bare-min-bar">
+        <div>
+          <strong>🛟 Bare Minimum Mode</strong>
+          <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Survival mode — essential tasks only</div>
+        </div>
+        <div class="bare-min-toggle-wrap">
+          <span class="bare-label" id="bare-label">Off</span>
+          <label class="toggle" style="margin:0;">
+            <input type="checkbox" id="bare-min-toggle" onchange="toggleBareMin(this.checked)" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
     </div>
   </div>
 </header>
@@ -447,6 +569,20 @@
 
     <!-- SUNDAY -->
     <div class="day-panel" id="panel-0">
+
+      <!-- Top 3 Focus -->
+      <div class="focus-box" id="focus-0">
+        <div class="focus-box-header">
+          <div>
+            <div class="focus-box-title">🎯 Top 3 Focus</div>
+            <div class="focus-box-sub">If I do these 3 things, I win today</div>
+          </div>
+        </div>
+        <div class="focus-item"><div class="focus-num">1</div><input class="focus-input" id="focus-0-1" placeholder="Most important thing today…" onchange="saveFocus(0)" /></div>
+        <div class="focus-item"><div class="focus-num">2</div><input class="focus-input" id="focus-0-2" placeholder="Second priority…" onchange="saveFocus(0)" /></div>
+        <div class="focus-item"><div class="focus-num">3</div><input class="focus-input" id="focus-0-3" placeholder="Third priority…" onchange="saveFocus(0)" /></div>
+      </div>
+
       <div class="completion" id="done-0"><div class="completion-icon">🦚</div><div class="completion-title">Sunday Done!</div><div class="completion-sub">You're ahead of the week. Wonderful.</div></div>
 
       <div class="block-header"><span class="block-pill pill-amethyst">🌿 Sunday Planning</span><span class="block-rule"></span><span class="block-time">Anytime</span></div>
@@ -465,6 +601,21 @@
       </div>
       <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)">
         <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🧘 Rest & recharge</span><span class="tag tag-self">Self-care</span></div><div class="task-note">You need rest to give your best. Protect your Sunday time.</div></div></div>
+      </div>
+
+
+      <!-- End of Day Reflection -->
+      <div class="reflection-box" id="reflection-0">
+        <div class="reflection-title">🌙 End-of-Day Check-Out</div>
+        <div class="reflection-q">
+          <label>What went well today?</label>
+          <textarea id="refl-0-well" placeholder="Even one small win counts…" rows="2"></textarea>
+        </div>
+        <div class="reflection-q">
+          <label>What are we NOT stressing about tonight?</label>
+          <textarea id="refl-0-stress" placeholder="Let it go for now…" rows="2"></textarea>
+        </div>
+        <button class="reflection-save-btn" onclick="saveReflection(0)">Save Reflection ✓</button>
       </div>
 
       <div id="custom-list-0"></div>
@@ -493,6 +644,20 @@
 
     <!-- MONDAY -->
     <div class="day-panel" id="panel-1">
+
+      <!-- Top 3 Focus -->
+      <div class="focus-box" id="focus-1">
+        <div class="focus-box-header">
+          <div>
+            <div class="focus-box-title">🎯 Top 3 Focus</div>
+            <div class="focus-box-sub">If I do these 3 things, I win today</div>
+          </div>
+        </div>
+        <div class="focus-item"><div class="focus-num">1</div><input class="focus-input" id="focus-1-1" placeholder="Most important thing today…" onchange="saveFocus(1)" /></div>
+        <div class="focus-item"><div class="focus-num">2</div><input class="focus-input" id="focus-1-2" placeholder="Second priority…" onchange="saveFocus(1)" /></div>
+        <div class="focus-item"><div class="focus-num">3</div><input class="focus-input" id="focus-1-3" placeholder="Third priority…" onchange="saveFocus(1)" /></div>
+      </div>
+
       <div class="completion" id="done-1"><div class="completion-icon">🦚</div><div class="completion-title">Monday Complete!</div><div class="completion-sub">Strong start to the week!</div></div>
 
       <div class="block-header"><span class="block-pill pill-teal">☀️ Before School</span><span class="block-rule"></span><span class="block-time">7:00–8:00 am</span></div>
@@ -544,6 +709,21 @@
         <div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Reply to emails & reset classroom</span><span class="tag tag-admin">Admin</span></div></div></div>
       </div>
 
+
+      <!-- End of Day Reflection -->
+      <div class="reflection-box" id="reflection-1">
+        <div class="reflection-title">🌙 End-of-Day Check-Out</div>
+        <div class="reflection-q">
+          <label>What went well today?</label>
+          <textarea id="refl-1-well" placeholder="Even one small win counts…" rows="2"></textarea>
+        </div>
+        <div class="reflection-q">
+          <label>What are we NOT stressing about tonight?</label>
+          <textarea id="refl-1-stress" placeholder="Let it go for now…" rows="2"></textarea>
+        </div>
+        <button class="reflection-save-btn" onclick="saveReflection(1)">Save Reflection ✓</button>
+      </div>
+
       <div id="custom-list-1"></div>
       <button class="add-task-btn" onclick="toggleAddForm(1)"><span class="add-icon">＋</span> Add a Monday task</button>
       <div class="add-form" id="add-form-1">
@@ -557,6 +737,20 @@
 
     <!-- TUESDAY -->
     <div class="day-panel" id="panel-2">
+
+      <!-- Top 3 Focus -->
+      <div class="focus-box" id="focus-2">
+        <div class="focus-box-header">
+          <div>
+            <div class="focus-box-title">🎯 Top 3 Focus</div>
+            <div class="focus-box-sub">If I do these 3 things, I win today</div>
+          </div>
+        </div>
+        <div class="focus-item"><div class="focus-num">1</div><input class="focus-input" id="focus-2-1" placeholder="Most important thing today…" onchange="saveFocus(2)" /></div>
+        <div class="focus-item"><div class="focus-num">2</div><input class="focus-input" id="focus-2-2" placeholder="Second priority…" onchange="saveFocus(2)" /></div>
+        <div class="focus-item"><div class="focus-num">3</div><input class="focus-input" id="focus-2-3" placeholder="Third priority…" onchange="saveFocus(2)" /></div>
+      </div>
+
       <div class="completion" id="done-2"><div class="completion-icon">🦚</div><div class="completion-title">Tuesday Complete!</div><div class="completion-sub">Halfway through? Almost. Keep going!</div></div>
 
       <div class="block-header"><span class="block-pill pill-teal">☀️ Before School</span><span class="block-rule"></span><span class="block-time">7:00–8:00 am</span></div>
@@ -582,6 +776,21 @@
       <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Plan Wednesday's lessons</span><span class="tag tag-planning">Planning</span></div></div></div></div>
       <div class="task-card" style="--accent:#D97706" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Grade & log student work</span><span class="tag tag-admin">Admin</span></div></div></div></div>
 
+
+      <!-- End of Day Reflection -->
+      <div class="reflection-box" id="reflection-2">
+        <div class="reflection-title">🌙 End-of-Day Check-Out</div>
+        <div class="reflection-q">
+          <label>What went well today?</label>
+          <textarea id="refl-2-well" placeholder="Even one small win counts…" rows="2"></textarea>
+        </div>
+        <div class="reflection-q">
+          <label>What are we NOT stressing about tonight?</label>
+          <textarea id="refl-2-stress" placeholder="Let it go for now…" rows="2"></textarea>
+        </div>
+        <button class="reflection-save-btn" onclick="saveReflection(2)">Save Reflection ✓</button>
+      </div>
+
       <div id="custom-list-2"></div>
       <button class="add-task-btn" onclick="toggleAddForm(2)"><span class="add-icon">＋</span> Add a Tuesday task</button>
       <div class="add-form" id="add-form-2">
@@ -595,6 +804,20 @@
 
     <!-- WEDNESDAY -->
     <div class="day-panel" id="panel-3">
+
+      <!-- Top 3 Focus -->
+      <div class="focus-box" id="focus-3">
+        <div class="focus-box-header">
+          <div>
+            <div class="focus-box-title">🎯 Top 3 Focus</div>
+            <div class="focus-box-sub">If I do these 3 things, I win today</div>
+          </div>
+        </div>
+        <div class="focus-item"><div class="focus-num">1</div><input class="focus-input" id="focus-3-1" placeholder="Most important thing today…" onchange="saveFocus(3)" /></div>
+        <div class="focus-item"><div class="focus-num">2</div><input class="focus-input" id="focus-3-2" placeholder="Second priority…" onchange="saveFocus(3)" /></div>
+        <div class="focus-item"><div class="focus-num">3</div><input class="focus-input" id="focus-3-3" placeholder="Third priority…" onchange="saveFocus(3)" /></div>
+      </div>
+
       <div class="completion" id="done-3"><div class="completion-icon">🦚</div><div class="completion-title">Wednesday Done!</div><div class="completion-sub">Over the hump — brilliant work.</div></div>
 
       <div class="block-header"><span class="block-pill pill-teal">☀️ Before School</span><span class="block-rule"></span><span class="block-time">7:00–8:00 am</span></div>
@@ -620,6 +843,21 @@
       <div class="task-card" style="--accent:#7C3AED" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Plan Thursday & Friday lessons</span><span class="tag tag-planning">Planning</span></div></div></div></div>
       <div class="task-card" style="--accent:#D97706" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Grade & log student work</span><span class="tag tag-admin">Admin</span></div></div></div></div>
 
+
+      <!-- End of Day Reflection -->
+      <div class="reflection-box" id="reflection-3">
+        <div class="reflection-title">🌙 End-of-Day Check-Out</div>
+        <div class="reflection-q">
+          <label>What went well today?</label>
+          <textarea id="refl-3-well" placeholder="Even one small win counts…" rows="2"></textarea>
+        </div>
+        <div class="reflection-q">
+          <label>What are we NOT stressing about tonight?</label>
+          <textarea id="refl-3-stress" placeholder="Let it go for now…" rows="2"></textarea>
+        </div>
+        <button class="reflection-save-btn" onclick="saveReflection(3)">Save Reflection ✓</button>
+      </div>
+
       <div id="custom-list-3"></div>
       <button class="add-task-btn" onclick="toggleAddForm(3)"><span class="add-icon">＋</span> Add a Wednesday task</button>
       <div class="add-form" id="add-form-3">
@@ -633,6 +871,20 @@
 
     <!-- THURSDAY -->
     <div class="day-panel" id="panel-4">
+
+      <!-- Top 3 Focus -->
+      <div class="focus-box" id="focus-4">
+        <div class="focus-box-header">
+          <div>
+            <div class="focus-box-title">🎯 Top 3 Focus</div>
+            <div class="focus-box-sub">If I do these 3 things, I win today</div>
+          </div>
+        </div>
+        <div class="focus-item"><div class="focus-num">1</div><input class="focus-input" id="focus-4-1" placeholder="Most important thing today…" onchange="saveFocus(4)" /></div>
+        <div class="focus-item"><div class="focus-num">2</div><input class="focus-input" id="focus-4-2" placeholder="Second priority…" onchange="saveFocus(4)" /></div>
+        <div class="focus-item"><div class="focus-num">3</div><input class="focus-input" id="focus-4-3" placeholder="Third priority…" onchange="saveFocus(4)" /></div>
+      </div>
+
       <div class="completion" id="done-4"><div class="completion-icon">🦚</div><div class="completion-title">Thursday Done!</div><div class="completion-sub">One day left — you're almost there!</div></div>
 
       <div class="block-header"><span class="block-pill pill-teal">☀️ Before School</span><span class="block-rule"></span><span class="block-time">7:00–8:00 am</span></div>
@@ -658,6 +910,21 @@
       <div class="task-card" style="--accent:#D97706" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Grade & log student work</span><span class="tag tag-admin">Admin</span></div></div></div></div>
       <div class="task-card" style="--accent:#0E7C7B" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Reply to emails & parent messages</span><span class="tag tag-admin">Admin</span></div></div></div></div>
 
+
+      <!-- End of Day Reflection -->
+      <div class="reflection-box" id="reflection-4">
+        <div class="reflection-title">🌙 End-of-Day Check-Out</div>
+        <div class="reflection-q">
+          <label>What went well today?</label>
+          <textarea id="refl-4-well" placeholder="Even one small win counts…" rows="2"></textarea>
+        </div>
+        <div class="reflection-q">
+          <label>What are we NOT stressing about tonight?</label>
+          <textarea id="refl-4-stress" placeholder="Let it go for now…" rows="2"></textarea>
+        </div>
+        <button class="reflection-save-btn" onclick="saveReflection(4)">Save Reflection ✓</button>
+      </div>
+
       <div id="custom-list-4"></div>
       <button class="add-task-btn" onclick="toggleAddForm(4)"><span class="add-icon">＋</span> Add a Thursday task</button>
       <div class="add-form" id="add-form-4">
@@ -671,6 +938,20 @@
 
     <!-- FRIDAY -->
     <div class="day-panel" id="panel-5">
+
+      <!-- Top 3 Focus -->
+      <div class="focus-box" id="focus-5">
+        <div class="focus-box-header">
+          <div>
+            <div class="focus-box-title">🎯 Top 3 Focus</div>
+            <div class="focus-box-sub">If I do these 3 things, I win today</div>
+          </div>
+        </div>
+        <div class="focus-item"><div class="focus-num">1</div><input class="focus-input" id="focus-5-1" placeholder="Most important thing today…" onchange="saveFocus(5)" /></div>
+        <div class="focus-item"><div class="focus-num">2</div><input class="focus-input" id="focus-5-2" placeholder="Second priority…" onchange="saveFocus(5)" /></div>
+        <div class="focus-item"><div class="focus-num">3</div><input class="focus-input" id="focus-5-3" placeholder="Third priority…" onchange="saveFocus(5)" /></div>
+      </div>
+
       <div class="completion" id="done-5"><div class="completion-icon">🦚</div><div class="completion-title">Friday Complete!</div><div class="completion-sub">You made it through the whole week. Spectacular.</div></div>
 
       <div class="block-header"><span class="block-pill pill-teal">☀️ Before School</span><span class="block-rule"></span><span class="block-time">7:00–8:00 am</span></div>
@@ -697,6 +978,21 @@
       <div class="task-card" style="--accent:#9333EA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Outline next week's plans</span><span class="tag tag-planning">Planning</span></div><div class="task-note">Even rough notes will make Sunday easier</div></div></div></div>
       <div class="task-card break-style" style="--accent:#9333EA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">✨ Name one win from this week</span><span class="tag tag-self">Self-care</span></div><div class="task-note">You showed up all week. That matters.</div></div></div></div>
 
+
+      <!-- End of Day Reflection -->
+      <div class="reflection-box" id="reflection-5">
+        <div class="reflection-title">🌙 End-of-Day Check-Out</div>
+        <div class="reflection-q">
+          <label>What went well today?</label>
+          <textarea id="refl-5-well" placeholder="Even one small win counts…" rows="2"></textarea>
+        </div>
+        <div class="reflection-q">
+          <label>What are we NOT stressing about tonight?</label>
+          <textarea id="refl-5-stress" placeholder="Let it go for now…" rows="2"></textarea>
+        </div>
+        <button class="reflection-save-btn" onclick="saveReflection(5)">Save Reflection ✓</button>
+      </div>
+
       <div id="custom-list-5"></div>
       <button class="add-task-btn" onclick="toggleAddForm(5)"><span class="add-icon">＋</span> Add a Friday task</button>
       <div class="add-form" id="add-form-5">
@@ -710,6 +1006,20 @@
 
     <!-- SATURDAY -->
     <div class="day-panel" id="panel-6">
+
+      <!-- Top 3 Focus -->
+      <div class="focus-box" id="focus-6">
+        <div class="focus-box-header">
+          <div>
+            <div class="focus-box-title">🎯 Top 3 Focus</div>
+            <div class="focus-box-sub">If I do these 3 things, I win today</div>
+          </div>
+        </div>
+        <div class="focus-item"><div class="focus-num">1</div><input class="focus-input" id="focus-6-1" placeholder="Most important thing today…" onchange="saveFocus(6)" /></div>
+        <div class="focus-item"><div class="focus-num">2</div><input class="focus-input" id="focus-6-2" placeholder="Second priority…" onchange="saveFocus(6)" /></div>
+        <div class="focus-item"><div class="focus-num">3</div><input class="focus-input" id="focus-6-3" placeholder="Third priority…" onchange="saveFocus(6)" /></div>
+      </div>
+
       <div class="completion" id="done-6"><div class="completion-icon">🦚</div><div class="completion-title">Saturday Done!</div><div class="completion-sub">Weekend warrior. Enjoy the rest of your day!</div></div>
       <div class="block-header"><span class="block-pill pill-amethyst">🌸 Saturday — Weekend</span><span class="block-rule"></span><span class="block-time">Your time</span></div>
       <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🛌 Sleep in &amp; rest</span><span class="tag tag-self">Self-care</span></div><div class="task-note">You earned it. Rest is productive.</div></div></div></div>
@@ -719,6 +1029,21 @@
       <div class="task-card" style="--accent:#D97706" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">Any school errands or supply run</span><span class="tag tag-admin">Admin</span></div><div class="task-note">Grab anything you need before Sunday prep</div></div></div></div>
       <div class="task-card break-style" style="--accent:#059669" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">🍽️ Enjoy a meal you love</span><span class="tag tag-self">Self-care</span></div><div class="task-note">Cook, order, or go out — you deserve it</div></div></div></div>
       <div class="task-card break-style" style="--accent:#9333EA" data-fixed="1" onclick="toggleCard(this)"><div class="check-area"><div class="check"><span class="check-mark">✓</span></div><div class="task-body"><div class="task-row"><span class="task-title">✨ Do something just for you</span><span class="tag tag-self">Self-care</span></div><div class="task-note">A hobby, a friend, a movie — full permission to enjoy.</div></div></div></div>
+
+      <!-- End of Day Reflection -->
+      <div class="reflection-box" id="reflection-6">
+        <div class="reflection-title">🌙 End-of-Day Check-Out</div>
+        <div class="reflection-q">
+          <label>What went well today?</label>
+          <textarea id="refl-6-well" placeholder="Even one small win counts…" rows="2"></textarea>
+        </div>
+        <div class="reflection-q">
+          <label>What are we NOT stressing about tonight?</label>
+          <textarea id="refl-6-stress" placeholder="Let it go for now…" rows="2"></textarea>
+        </div>
+        <button class="reflection-save-btn" onclick="saveReflection(6)">Save Reflection ✓</button>
+      </div>
+
       <div id="custom-list-6"></div>
       <button class="add-task-btn" onclick="toggleAddForm(6)"><span class="add-icon">＋</span> Add a Saturday task</button>
       <div class="add-form" id="add-form-6">
@@ -862,6 +1187,8 @@
     DAY_NAMES.forEach((_, d) => renderCustomTasks(d));
     DAY_NAMES.forEach((_, d) => applyChecks(d));
     selectDay(activeDay);
+    loadFocus();
+    loadReflections();
     hideToast();
   }
 
@@ -893,11 +1220,19 @@
 
   // ── TOGGLE TASK ────────────────────────────────────────
   async function toggleCard(card) {
+    const wasDone = card.classList.contains('done');
     card.classList.toggle('done');
     const panel = card.closest('.day-panel');
     const d     = parseInt(panel.id.replace('panel-',''));
     const checks = {};
     panel.querySelectorAll('.task-card').forEach((c, i) => { checks[i] = c.classList.contains('done'); });
+
+    // Celebration effects when checking OFF (completing a task)
+    if (!wasDone) {
+      card.classList.add('just-checked');
+      setTimeout(() => card.classList.remove('just-checked'), 600);
+      launchConfetti();
+    }
 
     // Update cache immediately for snappy UI
     if (!checkCache[d]) checkCache[d] = {};
@@ -927,7 +1262,7 @@
     const done = panel.querySelectorAll('.task-card.done').length;
     const pct  = all.length ? Math.round((done / all.length) * 100) : 0;
     document.getElementById('progressFill').style.width  = pct + '%';
-    document.getElementById('progressLabel').textContent  = done + ' of ' + all.length + ' tasks';
+    document.getElementById('progressLabel').innerHTML = done === 0 ? '<span>' + all.length + ' tasks today</span>' : '<span class="wins-label">🎉 ' + done + ' win' + (done===1?'':'s') + ' today!</span>';
     document.getElementById('progressPct').textContent    = pct + '%';
   }
 
@@ -1104,6 +1439,103 @@
   function hideToast() {
     const toast = document.getElementById('toast');
     if (toast) toast.style.opacity = '0';
+  }
+
+
+  // ── CONFETTI ───────────────────────────────────────────
+  function launchConfetti() {
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.classList.add('active');
+
+    const colors = ['#5EEAD4','#2563EB','#7C3AED','#FCD34D','#34D399','#F472B6'];
+    const pieces = Array.from({length: 60}, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      r: Math.random() * 6 + 3,
+      d: Math.random() * 60 + 10,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      tilt: Math.random() * 10 - 10,
+      tiltAngle: 0,
+      tiltSpeed: Math.random() * 0.1 + 0.05
+    }));
+
+    let frame = 0;
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach(p => {
+        p.tiltAngle += p.tiltSpeed;
+        p.y += (Math.cos(frame * 0.01 + p.d) + 1 + p.r / 3) * 1.8;
+        p.tilt = Math.sin(p.tiltAngle) * 12;
+        ctx.beginPath();
+        ctx.fillStyle = p.color;
+        ctx.ellipse(p.x + p.tilt, p.y, p.r, p.r * 0.4, p.tilt, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      frame++;
+      if (frame < 90) requestAnimationFrame(draw);
+      else { ctx.clearRect(0,0,canvas.width,canvas.height); canvas.classList.remove('active'); }
+    }
+    draw();
+  }
+
+  // ── BARE MINIMUM MODE ──────────────────────────────────
+  function toggleBareMin(on) {
+    document.body.classList.toggle('bare-min', on);
+    document.getElementById('bare-label').textContent = on ? 'On' : 'Off';
+    localStorage.setItem('td_bare_min', on ? '1' : '0');
+  }
+  // Restore bare min state
+  if (localStorage.getItem('td_bare_min') === '1') {
+    document.body.classList.add('bare-min');
+    const tog = document.getElementById('bare-min-toggle');
+    if (tog) { tog.checked = true; document.getElementById('bare-label').textContent = 'On'; }
+  }
+
+  // ── TOP 3 FOCUS ────────────────────────────────────────
+  function saveFocus(d) {
+    const v1 = (document.getElementById('focus-'+d+'-1')||{}).value || '';
+    const v2 = (document.getElementById('focus-'+d+'-2')||{}).value || '';
+    const v3 = (document.getElementById('focus-'+d+'-3')||{}).value || '';
+    localStorage.setItem('td_focus_'+d+'_'+todayStr, JSON.stringify([v1,v2,v3]));
+  }
+  function loadFocus() {
+    DAY_NAMES.forEach((_, d) => {
+      const saved = localStorage.getItem('td_focus_'+d+'_'+todayStr);
+      if (!saved) return;
+      try {
+        const [v1,v2,v3] = JSON.parse(saved);
+        const el1 = document.getElementById('focus-'+d+'-1');
+        const el2 = document.getElementById('focus-'+d+'-2');
+        const el3 = document.getElementById('focus-'+d+'-3');
+        if (el1) el1.value = v1||'';
+        if (el2) el2.value = v2||'';
+        if (el3) el3.value = v3||'';
+      } catch(e) {}
+    });
+  }
+
+  // ── REFLECTION ─────────────────────────────────────────
+  function saveReflection(d) {
+    const well   = (document.getElementById('refl-'+d+'-well')||{}).value || '';
+    const stress = (document.getElementById('refl-'+d+'-stress')||{}).value || '';
+    localStorage.setItem('td_refl_'+d+'_'+todayStr, JSON.stringify({well, stress}));
+    showToast('Reflection saved ✓ 🌙');
+  }
+  function loadReflections() {
+    DAY_NAMES.forEach((_, d) => {
+      const saved = localStorage.getItem('td_refl_'+d+'_'+todayStr);
+      if (!saved) return;
+      try {
+        const {well, stress} = JSON.parse(saved);
+        const elW = document.getElementById('refl-'+d+'-well');
+        const elS = document.getElementById('refl-'+d+'-stress');
+        if (elW) elW.value = well||'';
+        if (elS) elS.value = stress||'';
+      } catch(e) {}
+    });
   }
 
   // ── UTILS ──────────────────────────────────────────────
